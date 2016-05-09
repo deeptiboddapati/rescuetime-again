@@ -278,6 +278,10 @@ function displayCombined(DOMChart, data) {
     if (avgEfficency.length === 7) {
         categories = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     }
+    var productiveTime = [];
+    totalTime.forEach(function(item,index) {
+        productiveTime.push(item*avgEfficency[index]||0);
+    });
 
     $(DOMChart).highcharts({
         chart: {
@@ -338,6 +342,17 @@ function displayCombined(DOMChart, data) {
             tooltip: {
                 pointFormat: 'Total Time: {point.y:.2f} hh<br>'
             }
+
+
+        },{
+            name: 'Productive Time',
+            type: 'column',
+            yAxis: 1,
+            data: productiveTime,
+            tooltip: {
+                pointFormat: 'Productive Time: {point.y:.2f} hh<br>'
+            }
+
 
         }, {
             name: 'Efficiency',
