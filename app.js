@@ -154,7 +154,7 @@ function startDownload(data, type) {
 /***************
  *****CHARTS****
  ***************/
-
+var gndata = '';
 function fullEfficiencyChart(data) {
     var normalizedData = [];
     data.forEach(function(point) {
@@ -162,7 +162,7 @@ function fullEfficiencyChart(data) {
         // normalizedData.push([new Date(point[0]).getTime(), point[4]]);
     });
 
-
+    gndata = data;
     $('#efficiency_chart').highcharts('StockChart', {
         chart: {
             height: Math.max(window.innerHeight - 100, 350)
@@ -219,17 +219,23 @@ function fullEfficiencyChart(data) {
 
 }
 
+
+
 var ghours ='';
 var gdays = '';
-var gdates = '';
+var gdatesofyear = '';
 function combinedCharts(data) {
     var hours = initializeArray(24);
     var days = initializeArray(7);
+    var datesofyear = initializeDayArray(366);
     var hour = 0;
     var day = 0;
     var date = 0;
     var month = '';
     var mnthday = '';
+    var dayofyear = -1;
+    var secondsinday = 60*60*24*1000;
+    var firstofyear = new Date(new Date().getFullYear(),0,1,0);
     data.forEach(function(element) {
         hour = parseInt(element[0].substr(11, 2),10); //note: I can't use Date() because rescuetime log the date based on user's system time which is in GMT but when using Date() on the string in the JSON is converted in UTC :(
         day = new Date(element[0].substr(0, 10)).getDay();
@@ -237,6 +243,8 @@ function combinedCharts(data) {
         month = new Date(element[0]).getMonth();
         mnthday = month +'/'+date;
         
+        dayofyear = Math.floor((new Date(element[0]) - firstofyear)/secondsinday)
+
         hours[hour].totalTime += element[1]; //sum of the total time for a given hour
         hours[hour].totalEfficency += (element[4] * element[1]) / 3600; //normalize the data
         hours[hour].count++; //how many entries for a given hour. Used to calculate the average efficency
@@ -244,24 +252,29 @@ function combinedCharts(data) {
         days[day].totalTime += element[1];
         days[day].totalEfficency += (element[4] * element[1]) / 3600;
         days[day].count++;
-        if(typeof days[day].dates === 'undefined' ){
-            days[day].dates = new Set();
-            days[day].dates.add(mnthday);
-        }
-        else{
-            days[day].dates.add(mnthday);
-        }
         
+        days[day].dates.add(mnthday);
+        
+
+        
+        
+
+      datesofyear[dayofyear].add(hour);
+     
 
     });
 
     displayCombined('#combo_hour_chart', calcAvg(hours));
     displayCombined('#combo_day_chart', calcAvg(days));
     displayAvgweek('#daily_avg_chart' ,calcAvg(days));
+    activityPerHourChart(datesofyear);
     ghours = hours;
     gdays = days;
-    
+    gdatesofyear = datesofyear;
 }
+
+
+
 
 //inizialize the array with the default object
 function initializeArray(length) {
@@ -272,11 +285,20 @@ function initializeArray(length) {
             totalEfficency: 0,
             avgEfficency: 0,
             count: 0
+
         });
+        array[i].dates = new Set();
     }
     return array;
 }
+function initializeDayArray(length) {
+    var array = [];
+    for (var i = 0; i < length; i++) {
+        array[i] = new Set()
 
+    }
+    return array;
+}
 //calculate the average efficency for the given period (day or hour)
 function calcAvg(array) {
     array.forEach(function(element) {
@@ -284,6 +306,45 @@ function calcAvg(array) {
     });
     return array;
 }
+
+
+
+function activityPerHourChart(data) {
+    var normalizedData = [];
+    data.forEach(function(point, index){
+        if(point.size >0){
+            point.forEach(function(item){
+            normalizedData.push([new Date(2016,0,index,0).getTime(),item])
+        })
+        }
+        
+        
+    });
+
+
+    $('#activity_chart').highcharts('StockChart', {
+        chart: {
+            height: Math.max(window.innerHeight - 100, 350)
+        },
+        title: {
+            text: 'Productivity for the selected range'
+        },
+
+        series: [{
+            name: 'Efficiency',
+            type: 'scatter',
+            pointWith: 1,
+            data: normalizedData,
+            color: '#1111cc',
+            tooltip: {
+                valueDecimals: 0
+            },
+        }]
+    });
+    Highcharts.setOptions(Highcharts.theme);
+
+}
+
 
 //create the chart with total time and average efficency
 function displayCombined(DOMChart, data) {

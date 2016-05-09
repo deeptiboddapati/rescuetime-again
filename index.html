@@ -114,6 +114,31 @@
                 <div id="efficiency_chart"></div>
             </div>
         </div>
+        
+        <div class="row chart">
+            <div class="col-sm-12">
+                <blockquote class="col-sm-offset-1 col-sm-10">
+                    <p>This chart shows your productivity during the select range. Productivity is calculated with this formula:
+                        <br>(Time*RescueTime's Productivity Score)/3600.
+                        <br>This means that if you do 60 minutes with 100 as Productivity Score your productivity will be 100 too, but if you do only 30 minutes with 100 Productivity Score your productivity will be 50!
+                        <br> You can think at blue line as the things you got done.
+                    </p>
+
+                </blockquote>
+                <!--<h2>Productivity for the selected range</h2>-->
+
+                <div class="input-group">
+
+                    <span class="input-group-addon">Trendline smoothness (1 to 50)</span>
+                    <input type="number" id="trendLineSpinner" min="1" max="50" class="form-control" value="5" />
+
+                </div>
+
+                <br>
+                <div id="activity_chart"></div>
+            </div>
+        </div>
+
 
         <div class="row chart">
             <div class="col-sm-12">
