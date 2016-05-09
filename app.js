@@ -278,6 +278,8 @@ function displayCombined(DOMChart, data) {
     if (avgEfficency.length === 7) {
         categories = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     }
+    console.log(totalTime[0]);
+    console.log(avgEfficency[0]);
     var productiveTime = [];
     totalTime.forEach(function(item,index) {
         productiveTime.push(item*avgEfficency[index]||0);
