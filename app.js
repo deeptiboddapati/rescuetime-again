@@ -219,27 +219,48 @@ function fullEfficiencyChart(data) {
 
 }
 
-
+var ghours ='';
+var gdays = '';
+var gdates = '';
 function combinedCharts(data) {
     var hours = initializeArray(24);
     var days = initializeArray(7);
     var hour = 0;
     var day = 0;
+    var date = 0;
+    var month = '';
+    var mnthday = '';
     data.forEach(function(element) {
         hour = parseInt(element[0].substr(11, 2),10); //note: I can't use Date() because rescuetime log the date based on user's system time which is in GMT but when using Date() on the string in the JSON is converted in UTC :(
         day = new Date(element[0].substr(0, 10)).getDay();
-
+        date = new Date(element[0]).getDate();
+        month = new Date(element[0]).getMonth();
+        mnthday = month +'/'+date;
+        
         hours[hour].totalTime += element[1]; //sum of the total time for a given hour
         hours[hour].totalEfficency += (element[4] * element[1]) / 3600; //normalize the data
         hours[hour].count++; //how many entries for a given hour. Used to calculate the average efficency
-
+        
         days[day].totalTime += element[1];
         days[day].totalEfficency += (element[4] * element[1]) / 3600;
         days[day].count++;
+        if(typeof days[day].dates === 'undefined' ){
+            days[day].dates = new Set();
+            days[day].dates.add(mnthday);
+        }
+        else{
+            days[day].dates.add(mnthday);
+        }
+        
+
     });
 
     displayCombined('#combo_hour_chart', calcAvg(hours));
     displayCombined('#combo_day_chart', calcAvg(days));
+    displayAvgweek('#daily_avg_chart' ,calcAvg(days));
+    ghours = hours;
+    gdays = days;
+    
 }
 
 //inizialize the array with the default object
@@ -278,13 +299,12 @@ function displayCombined(DOMChart, data) {
     if (avgEfficency.length === 7) {
         categories = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     }
-    console.log(totalTime[0]);
-    console.log(avgEfficency[0]);
+    
     var productiveTime = [];
     totalTime.forEach(function(item,index) {
-        productiveTime.push(item*avgEfficency[index]||0);
+        productiveTime.push(item*avgEfficency[index]/100);
     });
-
+    dataglo = data;
     $(DOMChart).highcharts({
         chart: {
             zoomType: 'xy'
@@ -364,6 +384,113 @@ function displayCombined(DOMChart, data) {
         }]
     });
 }
+
+function displayAvgweek(DOMChart, data) {
+    var totalTime = [];
+    data.forEach(function(item) {
+        if(!(typeof item.dates=== 'undefined')){
+        totalTime.push(item.totalTime / (3600*item.dates.size));
+        } 
+        else{
+            totalTime.push(0);
+        }
+
+    });
+    var avgEfficency = [];
+    data.forEach(function(item) {
+        avgEfficency.push(item.avgEfficency || 0);
+    });
+    var categories = [];
+    if (avgEfficency.length === 7) {
+        categories = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    }
+    
+    var productiveTime = [];
+
+    totalTime.forEach(function(item,index) {
+        productiveTime.push(item*avgEfficency[index]/100);
+    });
+    $(DOMChart).highcharts({
+        chart: {
+            zoomType: 'xy'
+        },
+
+        xAxis: [{
+            categories: categories,
+            crosshair: true
+        }],
+        yAxis: [{ // Primary yAxis
+            labels: {
+                format: '{value}%',
+                style: {
+                    color: Highcharts.getOptions().colors[1]
+                }
+            },
+            title: {
+                text: 'Efficiency',
+                style: {
+                    color: Highcharts.getOptions().colors[1]
+                }
+            },
+            min: 0,
+            max: 100
+        }, { // Secondary yAxis
+            title: {
+                text: 'Total Time',
+                style: {
+                    color: Highcharts.getOptions().colors[0]
+                }
+            },
+            labels: {
+                format: '{value} H',
+                style: {
+                    color: Highcharts.getOptions().colors[0]
+                }
+            },
+            opposite: true
+        }],
+        tooltip: {
+            shared: true
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'left',
+            x: 50,
+            verticalAlign: 'top',
+            y: 50,
+            floating: true,
+            backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
+        },
+        series: [{
+            name: 'Average Time Per Day',
+            type: 'column',
+            yAxis: 1,
+            data: totalTime,
+            tooltip: {
+                pointFormat: 'Average Time Per Day: {point.y:.2f} hh<br>'
+            }
+
+        },{
+            name: 'Average Productive Time Per Day',
+            type: 'column',
+            yAxis: 1,
+            data: productiveTime,
+            tooltip: {
+                pointFormat: 'Average Productive Time Per Day: {point.y:.2f} hh<br>'
+            }
+
+        }, {
+            name: 'Efficiency',
+            type: 'spline',
+            data: avgEfficency,
+            tooltip: {
+                pointFormat: 'Efficiency: {point.y:.2f} %'
+            }
+        }]
+    });
+}
+
+
 
 //chart with the total time
 function activityChart(data) {
