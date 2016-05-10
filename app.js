@@ -314,21 +314,40 @@ function activityPerHourChart(data) {
     data.forEach(function(point, index){
         if(point.size >0){
             point.forEach(function(item){
-            normalizedData.push([new Date(2016,0,index,0).getTime(),item])
+            normalizedData.push([Date.UTC(2016,0,index,0),item])
         })
         }
         
         
     });
 
+    var hoursinaday  =[]
+    for(var i = 0; i < 24; i++){
+        hoursinaday.push(i);
+    }
 
-    $('#activity_chart').highcharts('StockChart', {
+    $('#activity_chart').highcharts( {
         chart: {
             height: Math.max(window.innerHeight - 100, 350)
         },
         title: {
             text: 'Productivity for the selected range'
         },
+        xAxis: {
+    labels:{
+         formatter: function() {
+             return Highcharts.dateFormat("%b %e", this.value);
+        }
+
+    }
+       
+    },
+    yAxis: {
+       allowDecimals: false,
+       categories: hoursinaday
+        
+    },
+
 
         series: [{
             name: 'Efficiency',
@@ -341,7 +360,7 @@ function activityPerHourChart(data) {
             },
         }]
     });
-    Highcharts.setOptions(Highcharts.theme);
+    
 
 }
 
