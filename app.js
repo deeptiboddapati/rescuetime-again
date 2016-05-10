@@ -314,7 +314,7 @@ function activityPerHourChart(data) {
     data.forEach(function(point, index){
         if(point.size >0){
             point.forEach(function(item){
-            normalizedData.push([new Date(2016,0,index,0).getTime(),item])
+            normalizedData.push([Date.UTC(2016,0,index,0),item])
         })
         }
         
@@ -333,9 +333,13 @@ function activityPerHourChart(data) {
         title: {
             text: 'Productivity for the selected range'
         },
+            chart: {
+            zoomType: 'x'
+        },
         xAxis: {
             type:"datetime",
-            maxZoom: 24 * 3600 * 1000
+            maxZoom: 24 * 3600 * 1000,
+              minTickInterval: 24 * 3600 * 1000
        
     },
     yAxis: {
@@ -350,6 +354,8 @@ function activityPerHourChart(data) {
             type: 'scatter',
             pointWith: 1,
             data: normalizedData,
+            pointStart: Date.UTC(normalizedData[0][0]),
+            pointInterval: 24 * 3600 * 1000,
             color: '#1111cc',
             tooltip: {
                 valueDecimals: 0
